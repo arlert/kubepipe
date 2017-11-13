@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    volume.beta.kubernetes.io/storage-class: nfs
+    volume.beta.kubernetes.io/storage-provisioner: nfs
+  name: sourcecode
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: git
+spec:
+  restartPolicy: Never
+  containers:
+  - name: c
+    image: registry.docker-cn.com/alpine/git:latest
+    command: ["sh", "-c", "mkdir -p /go/src/u2takey; cd /go/src/u2takey; git clone https://github.com/u2takey/sample-helloworld.git"]
+    volumeMounts:
+    - name: sourcecode
+      mountPath: /go/src
+  volumes:
+  - name: sourcecode
+    persistentVolumeClaim:
+      claimName: sourcecode
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: golang
+spec:
+  restartPolicy: Never
+  containers:
+  - name: c
+    image: registry.docker-cn.com/library/golang:1.8-alpine3.5
+    command: ["sh", "-c", "cd /go/src/u2takey/sample-helloworld/go; go build -o go .; echo build success"]
+    env:
+    - name: GOPATH
+      value: /go
+    volumeMounts:
+    - name: sourcecode
+      mountPath: /go/src
+  volumes:
+  - name: sourcecode
+    persistentVolumeClaim:
+      claimName: sourcecode
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dind
+spec:
+  restartPolicy: Never
+  containers:
+  - name: c
+    image: registry.docker-cn.com/u2takey/dind:17.06
+    command: ["wrapper.sh", "cd /go/src/u2takey/sample-helloworld/go; docker build -t u2takey/helloworld:test123 ."]
+    volumeMounts:
+    - name: sourcecode
+      mountPath: /go/src
+    env:
+    - name: DOCKER_STORAGE_DRIVER
+      value: aufs
+    securityContext:
+      privileged: true
+  volumes:
+  - name: sourcecode
+    persistentVolumeClaim:
+      claimName: sourcecode
+---
+apiVersion: v1
+kind: Pipe
+metadata:
+  name: pipe
+spec:
+  stages:
+  - name: git-clone
+    jobs: 
+    - git
+  - name: go-build
+    jobs: 
+    - golang
+  - name: docker-build
+    jobs: 
+    - dind

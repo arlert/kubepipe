@@ -122,7 +122,7 @@ func (p *Piperuner) ClearPod(pod *v1.Pod) (err error) {
 		PropagationPolicy: &a,
 	})
 	if k8serror.IsNotFound(err) {
-		logrus.Infoln("pod not found", pod.Name)
+		logrus.Debugln("pod not found", pod.Name)
 		return nil
 	}
 	return
@@ -143,7 +143,28 @@ func (p *Piperuner) ClearService(svc *v1.Service) (err error) {
 		PropagationPolicy: &a,
 	})
 	if k8serror.IsNotFound(err) {
-		logrus.Infoln("svc not found", svc.Name)
+		logrus.Debugln("svc not found", svc.Name)
+		return nil
+	}
+	return
+}
+
+// CreatePvc ...
+func (p *Piperuner) CreatePvc(pvc *v1.PersistentVolumeClaim) (err error) {
+	logrus.Debugln("creating pvc", pvc.Namespace, pvc.Name)
+	_, err = p.client.CoreV1().PersistentVolumeClaims(pvc.Namespace).Create(pvc)
+	return
+}
+
+// ClearService : rm/clear
+func (p *Piperuner) ClearPvc(pvc *v1.PersistentVolumeClaim) (err error) {
+	logrus.Debugln("clearing pvc", pvc.Namespace, pvc.Name)
+	a := metav1.DeletePropagationForeground
+	err = p.client.CoreV1().PersistentVolumeClaims(pvc.Namespace).Delete(pvc.Name, &metav1.DeleteOptions{
+		PropagationPolicy: &a,
+	})
+	if k8serror.IsNotFound(err) {
+		logrus.Debugln("pvc not found", pvc.Name)
 		return nil
 	}
 	return

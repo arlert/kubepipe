@@ -30,6 +30,7 @@ func init() {
 func addKnownTypes() {
 	Scheme.AddKnownTypes(SchemeGroupVersion,
 		&v1.Pod{},
+		&v1.PersistentVolumeClaim{},
 		&v1.Service{},
 		&Pipe{},
 	)
@@ -40,6 +41,7 @@ func addKnownTypes() {
 type Parser struct {
 	Pods     map[string]*v1.Pod
 	Servcies map[string]*v1.Service
+	Pvcs     map[string]*v1.PersistentVolumeClaim
 	Pipe     *Pipe
 }
 
@@ -48,6 +50,7 @@ func NewParser() *Parser {
 	return &Parser{
 		Pods:     make(map[string]*v1.Pod),
 		Servcies: make(map[string]*v1.Service),
+		Pvcs:     make(map[string]*v1.PersistentVolumeClaim),
 	}
 }
 
@@ -93,6 +96,13 @@ func (p *Parser) Parse(path string) error {
 					service.Namespace = defaultNamespace
 				}
 				p.Servcies[service.Name] = service
+			}
+		} else if obj.GetObjectKind().GroupVersionKind().Kind == "PersistentVolumeClaim" {
+			if pvc, ok := obj.(*v1.PersistentVolumeClaim); ok {
+				if pvc.Namespace == "" {
+					pvc.Namespace = defaultNamespace
+				}
+				p.Pvcs[pvc.Name] = pvc
 			}
 		} else if obj.GetObjectKind().GroupVersionKind().Kind == "Pipe" {
 			if pipe, ok := obj.(*Pipe); ok {

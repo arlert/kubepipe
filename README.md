@@ -118,10 +118,18 @@ start -> stage1[pod1] -> stage2[pod2] -> stage3[pod3] -> finish
 ```
 
 ### example-2
-使用service 的例子，执行流程如下，会先创建service和service pod，在pipeline完成的时候销毁
+使用service的例子，执行流程如下，会先创建service和service pod，在pipeline完成的时候销毁
 
 ```
-start ---------------------->stage-bench-test[bench-test] -> stage-pod[pod1] -> finish
+start ----------------------> stage-bench-test[bench-test] -> stage-pod[pod1] -> finish
       |-> Service[mysql-test] ---------------------------------------------------|
       |-> Pod[mysql-test] -------------------------------------------------------|
+```
+
+### example-3
+使用volumn的例子，执行流程如下，会依次执行git-clone, golang-build, docker-build，三步共享存储sourcecode。
+
+```
+start ---------------> git-clone[git] ->golang-build[golang] -> docker-build[ding] -> finish
+      |-> pvc[sourcecode]---------------------------------------------------------------|
 ```

@@ -19,6 +19,7 @@ type Pipeline struct {
 	config *Config
 }
 
+// GetClient ...
 func GetClient(master, kubeConfigLocation string) (*kubernetes.Clientset, error) {
 	// build the config from the master and kubeconfig location
 	config, err := clientcmd.BuildConfigFromFlags(master, kubeConfigLocation)
@@ -60,6 +61,12 @@ func (p *Pipeline) Run() error {
 				logrus.Warnln("clear svc error", err)
 			}
 		}
+		for _, pvc := range p.Pvcs {
+			err := p.ClearPvc(pvc)
+			if err != nil {
+				logrus.Warnln("clear pvc error", err)
+			}
+		}
 	}()
 
 	// Parse file
@@ -67,9 +74,12 @@ func (p *Pipeline) Run() error {
 	if err != nil {
 		return err
 	}
+	if p.Pipe == nil {
+		return errors.New("pipe not found")
+	}
 	logrus.Debug("parse config success", p.Pipe)
 
-	// 1. create service
+	// 1. create service /pvcs
 	for _, svc := range p.Servcies {
 		err := p.CreateService(svc)
 		if err != nil {
@@ -77,6 +87,12 @@ func (p *Pipeline) Run() error {
 		}
 	}
 
+	for _, pvc := range p.Pvcs {
+		err := p.CreatePvc(pvc)
+		if err != nil {
+			return err
+		}
+	}
 	// 2. create pod in service
 	tasks := []interface{}{}
 	for _, name := range p.Pipe.Spec.Services {
