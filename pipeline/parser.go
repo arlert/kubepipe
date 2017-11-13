@@ -30,6 +30,7 @@ func init() {
 func addKnownTypes() {
 	Scheme.AddKnownTypes(SchemeGroupVersion,
 		&v1.Pod{},
+		&v1.Service{},
 		&Pipe{},
 	)
 	return
@@ -80,7 +81,10 @@ func (p *Parser) Parse(path string) error {
 				if pod.Namespace == "" {
 					pod.Namespace = defaultNamespace
 				}
-				pod.Labels = map[string]string{"name": pod.Name}
+				if pod.Labels == nil {
+					pod.Labels = map[string]string{}
+				}
+				pod.Labels["name"] = pod.Name
 				p.Pods[pod.Name] = pod
 			}
 		} else if obj.GetObjectKind().GroupVersionKind().Kind == "Service" {

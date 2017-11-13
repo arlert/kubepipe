@@ -93,7 +93,7 @@ Watch:
 }
 
 func (p *Piperuner) openLog(pod *v1.Pod) {
-	logrus.Debugln("watching pod log success", pod.Namespace, pod.Name)
+	logrus.Debugln("watching pod log", pod.Namespace, pod.Name)
 	for _, container := range pod.Spec.Containers {
 		req := p.client.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name,
 			&v1.PodLogOptions{Container: container.Name, Follow: true})
@@ -116,8 +116,11 @@ func (p *Piperuner) openLog(pod *v1.Pod) {
 
 // ClearPod : rm/clear
 func (p *Piperuner) ClearPod(pod *v1.Pod) (err error) {
-	err = p.client.CoreV1().Pods(pod.Namespace).Delete(pod.Name, nil)
-	// ingress may not exsit for alb
+	logrus.Debugln("clearing pod", pod.Namespace, pod.Name)
+	a := metav1.DeletePropagationForeground
+	err = p.client.CoreV1().Pods(pod.Namespace).Delete(pod.Name, &metav1.DeleteOptions{
+		PropagationPolicy: &a,
+	})
 	if k8serror.IsNotFound(err) {
 		logrus.Infoln("pod not found", pod.Name)
 		return nil
@@ -127,14 +130,18 @@ func (p *Piperuner) ClearPod(pod *v1.Pod) (err error) {
 
 // CreateService ...
 func (p *Piperuner) CreateService(svc *v1.Service) (err error) {
+	logrus.Debugln("creating service", svc.Namespace, svc.Name)
 	_, err = p.client.CoreV1().Services(svc.Namespace).Create(svc)
 	return
 }
 
 // ClearService : rm/clear
 func (p *Piperuner) ClearService(svc *v1.Service) (err error) {
-	err = p.client.CoreV1().Services(svc.Namespace).Delete(svc.Name, nil)
-	// ingress may not exsit for alb
+	logrus.Debugln("clearing service", svc.Namespace, svc.Name)
+	a := metav1.DeletePropagationForeground
+	err = p.client.CoreV1().Services(svc.Namespace).Delete(svc.Name, &metav1.DeleteOptions{
+		PropagationPolicy: &a,
+	})
 	if k8serror.IsNotFound(err) {
 		logrus.Infoln("svc not found", svc.Name)
 		return nil

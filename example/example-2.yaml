@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bench-test
+spec:
+  restartPolicy: Never
+  containers:
+  - name: c
+    image: registry.docker-cn.com/severalnines/sysbench:latest
+    command: ["sh", "-c", "sleep 20;sysbench --db-driver=mysql  --mysql-db=dbtest --oltp-table-size=1000 --oltp-tables-count=10 --threads=10 --mysql-host=mysql-test --mysql-port=3306 --mysql-user=root --mysql-password=root  /usr/share/sysbench/tests/include/oltp_legacy/parallel_prepare.lua run;sysbench --db-driver=mysql  --mysql-db=dbtest  --report-interval=10 --mysql-table-engine=innodb --oltp-table-size=1000 --oltp-tables-count=10 --max-time=120 --mysql-host=mysql-test --mysql-port=3306 --mysql-user=root --mysql-password=root /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua run;"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql-test
+  labels:
+    app: mysql-test
+spec:
+  restartPolicy: Never
+  containers:
+  - name: c
+    image: registry.docker-cn.com/library/mysql:5.6
+    ports:
+    - containerPort: 3306
+    env:
+    - name: MYSQL_ROOT_PASSWORD
+      value: root
+    - name: MYSQL_DATABASE
+      value: dbtest
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-test
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: mysql-test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod1
+spec:
+  restartPolicy: Never
+  containers:
+  - name: c
+    image: alpine
+    command: ["sh", "-c", "echo running pod1"]
+---
+apiVersion: v1
+kind: Pipe
+metadata:
+  name: pipe
+spec:
+  services:
+  - mysql-test
+  stages:
+  - name: stage-bench-test
+    jobs: 
+    - bench-test
+  - name: stage-pod
+    jobs: 
+    - pod1

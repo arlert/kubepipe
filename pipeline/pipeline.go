@@ -82,7 +82,7 @@ func (p *Pipeline) Run() error {
 	for _, name := range p.Pipe.Spec.Services {
 		if pod, ok := p.Pods[name]; ok {
 			tasks = append(tasks, func() (r interface{}, err error) {
-				r, err = p.RunPodUtil(pod, sets.NewString(string(v1.PodRunning)), time.Minute*5, true)
+				r, err = p.RunPodUtil(pod, sets.NewString(string(v1.PodRunning)), time.Minute*60, true)
 				return
 			})
 		}
@@ -109,7 +109,7 @@ func (p *Pipeline) Run() error {
 					logrus.Debugln("running pod start")
 					r, err = p.RunPodUtil(pod,
 						sets.NewString(string(v1.PodSucceeded), string(v1.PodFailed)),
-						time.Minute*5, true)
+						time.Minute*30, true)
 					// todo if fail, stop
 					logrus.Debugln("running pod error", err)
 					return

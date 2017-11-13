@@ -4,7 +4,7 @@ Exec pipelines on kubernetes
 ## pipeline.yaml
 - 由多个pod spec和一个pipe spec组成
 - pod spec是原生的kubernetes pod spec, 而pipe spec用yaml形式描述pod的执行次序。
-- stage中的任务并行执行，stage之间串行执行。
+- stage中的任务并行执行(目前一个stage只支持一个job)，stage之间串行执行。
 - service, env则会在整个执行过程中共享。
 
 一个pipeline.yaml应该是这样的。
@@ -108,3 +108,16 @@ DEBU[0010] Running complete
 DEBU[0010] watching pod log success default pod3
 running pod3
 ```
+
+## Examples
+### example-1
+顺序执行stage的例子，执行流程如下
+
+start -> stage1[pod1] -> stage2[pod2] -> stage3[pod3] -> finish
+
+### example-2
+使用service 的例子，执行流程如下，会先创建service和service pod，在pipeline完成的时候销毁
+
+start ---------------------->stage-bench-test[bench-test] -> stage-pod[pod1] -> finish
+      |-> Service[mysql-test] ---------------------------------------------------|
+      |-> Pod[mysql-test] -------------------------------------------------------|
