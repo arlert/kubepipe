@@ -113,11 +113,15 @@ running pod3
 ### example-1
 顺序执行stage的例子，执行流程如下
 
+```
 start -> stage1[pod1] -> stage2[pod2] -> stage3[pod3] -> finish
+```
 
 ### example-2
 使用service 的例子，执行流程如下，会先创建service和service pod，在pipeline完成的时候销毁
 
+```
 start ---------------------->stage-bench-test[bench-test] -> stage-pod[pod1] -> finish
       |-> Service[mysql-test] ---------------------------------------------------|
       |-> Pod[mysql-test] -------------------------------------------------------|
+```
