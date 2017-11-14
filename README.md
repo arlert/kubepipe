@@ -127,7 +127,7 @@ start ----------------------> stage-bench-test[bench-test] -> stage-pod[pod1] ->
 ```
 
 ### example-3
-使用volumn的例子，执行流程如下，会依次执行git-clone, golang-build, docker-build，三步共享存储sourcecode。
+使用volumn的例子（需要有pvc/storage class支持），执行流程如下，会依次执行git-clone, golang-build, docker-build，三步共享存储sourcecode。
 
 ```
 start ---------------> git-clone[git] ->golang-build[golang] -> docker-build[ding] -> finish
