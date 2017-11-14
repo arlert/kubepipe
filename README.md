@@ -1,7 +1,22 @@
 # kubepipe
 Exec pipelines on kubernetes
 
-## pipeline.yaml
+## Install
+### use go get 
+
+```
+ go get -u  github.com/arlert/kubepipe
+```
+
+### from source code
+
+```
+git clone https://github.com/arlert/kubepipe.git
+cd kubepipe 
+make build
+```
+
+## Pipeline.yaml
 - 由多个pod spec和一个pipe spec组成
 - pod spec是原生的kubernetes pod spec, 而pipe spec用yaml形式描述pod的执行次序。
 - stage中的任务并行执行(目前一个stage只支持一个job)，stage之间串行执行。
@@ -66,6 +81,7 @@ spec:
 Set valid KUBECONFIG in env first
 
 ```
+➜  kubepipe git:(master) ✗ echo $KUBECONFIG
 ➜  kubepipe git:(master) ✗ make build_static
 ➜  kubepipe git:(master) ✗ make/release/kubepipe run -f example/example-1.yaml
 running pod1
@@ -110,6 +126,9 @@ running pod3
 ```
 
 ## Examples
+
+例子位置在 https://github.com/arlert/kubepipe/tree/master/example
+
 ### example-1
 顺序执行stage的例子，执行流程如下
 
